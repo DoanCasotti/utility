@@ -21,10 +21,10 @@ resource "aws_db_instance" "main" {
   vpc_security_group_ids = [aws_security_group.rds.id]
   publicly_accessible    = false
 
-  multi_az               = false
+  multi_az                = false
   backup_retention_period = 7
-  skip_final_snapshot    = true
-  deletion_protection    = false
+  skip_final_snapshot     = true
+  deletion_protection     = false
 
   tags = {
     Name = "${var.project_name}-${var.environment}-RDS"

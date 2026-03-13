@@ -42,4 +42,5 @@ output "db_name" {
 output "connection_command" {
   description = "Comando para conectar ao banco"
   value       = "psql -h localhost -p 5433 -U ${var.db_username} -d postgres"
+  sensitive   = true
 }
