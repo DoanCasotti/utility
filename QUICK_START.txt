@@ -1,0 +1,67 @@
+═══════════════════════════════════════════════════════════════
+  🚀 GUIA RÁPIDO - AWS DevOps Infrastructure
+═══════════════════════════════════════════════════════════════
+
+📦 SETUP INICIAL
+────────────────────────────────────────────────────────────────
+1. Copiar configuração:
+   cp .env.example .env
+
+2. Editar credenciais:
+   nano .env
+
+3. Validar ambiente:
+   ./validate.sh
+
+═══════════════════════════════════════════════════════════════
+
+🚀 COMANDOS PRINCIPAIS
+────────────────────────────────────────────────────────────────
+./deploy.sh      → Criar toda infraestrutura (~10 min)
+./connect.sh     → Conectar ao banco
+./destroy.sh     → Deletar tudo (custo $0)
+
+═══════════════════════════════════════════════════════════════
+
+💰 GERENCIAMENTO DE CUSTOS
+────────────────────────────────────────────────────────────────
+make costs                    → Ver custos atuais
+scripts/stop-rds.sh          → Desligar RDS (~50% economia)
+scripts/stop-bastion.sh      → Desligar Bastion
+scripts/hibernate-rds.sh     → Snapshot + Delete (~85% economia)
+
+═══════════════════════════════════════════════════════════════
+
+🔧 UTILITÁRIOS
+────────────────────────────────────────────────────────────────
+make status      → Status dos recursos
+make backup      → Backup completo
+make help        → Lista todos comandos
+
+═══════════════════════════════════════════════════════════════
+
+📊 CENÁRIOS DE CUSTO (us-east-1)
+────────────────────────────────────────────────────────────────
+24/7 Ligado              → ~$17.81/mês
+Stop/Start Diário        → ~$6.21/mês
+Deletado com Snapshot    → ~$1.90/mês
+Destruído Completo       → $0.00/mês ✅
+
+═══════════════════════════════════════════════════════════════
+
+🔗 CONECTAR AO BANCO
+────────────────────────────────────────────────────────────────
+./connect.sh
+
+# Em outro terminal:
+psql -h localhost -p 5433 -U postgres -d postgres
+
+═══════════════════════════════════════════════════════════════
+
+📚 DOCUMENTAÇÃO COMPLETA
+────────────────────────────────────────────────────────────────
+README.md              → Guia completo
+TROUBLESHOOTING.md     → Solução de problemas
+GIT_SETUP.md           → Como subir para GitHub
+
+═══════════════════════════════════════════════════════════════
