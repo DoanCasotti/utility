@@ -11,6 +11,10 @@ if [ -f "$SCRIPT_DIR/.env" ]; then
     set -a
     source "$SCRIPT_DIR/.env"
     set +a
+elif [ -f "$SCRIPT_DIR/../.env" ]; then
+    set -a
+    source "$SCRIPT_DIR/../.env"
+    set +a
 else
     echo "❌ Arquivo .env não encontrado. Copie .env.example para .env"
     exit 1

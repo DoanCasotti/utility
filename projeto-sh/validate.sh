@@ -8,16 +8,23 @@ set -euo pipefail
 echo "🔍 Validando ambiente..."
 
 # 1. Verificar .env
-if [ ! -f ".env" ]; then
+if [ ! -f ".env" ] && [ ! -f "../.env" ]; then
     echo "❌ Arquivo .env não encontrado"
     echo "💡 Execute: cp .env.example .env"
     exit 1
 fi
-echo "✅ Arquivo .env encontrado"
 
-# 2. Carregar .env
-set -a
-source .env
+if [ -f ".env" ]; then
+    echo "✅ Arquivo .env encontrado"
+    set -a
+    source .env
+    set +a
+else
+    echo "✅ Arquivo .env encontrado (raiz)"
+    set -a
+    source ../.env
+    set +a
+fi
 set +a
 
 # 3. Verificar variáveis obrigatórias
