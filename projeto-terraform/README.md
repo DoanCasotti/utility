@@ -30,19 +30,22 @@ scripts/validate.sh
 
 ### 2. Configurar Variáveis
 ```bash
-cp terraform.tfvars.example terraform.tfvars
-nano terraform.tfvars
+cp .env.example .env
+nano .env
 ```
 
 ### 3. Deploy
 ```bash
 scripts/deploy.sh
-# Será solicitada a senha do banco
+# Gera terraform.tfvars automaticamente do .env
+# Solicita senha do banco
+# Salva outputs em terraform-outputs.json
 ```
 
 ### 4. Conectar ao Banco
 ```bash
 scripts/connect.sh
+# Usa terraform-outputs.json automaticamente
 ```
 
 ### 5. Destruir Tudo
@@ -62,11 +65,13 @@ projeto-terraform/
 ├── bastion.tf               # Bastion EC2
 ├── rds.tf                   # RDS PostgreSQL
 ├── outputs.tf               # Outputs
-├── terraform.tfvars.example # Template de variáveis
+├── .env.example             # Template de configuração
+├── terraform.tfvars.example # Template Terraform (gerado auto do .env)
+├── terraform-outputs.json   # Outputs salvos (gerado no deploy)
 └── scripts/
-    ├── deploy.sh            # Script de deploy
-    ├── connect.sh           # Script de conexão
-    ├── destroy.sh           # Script de destruição
+    ├── deploy.sh            # Deploy automatizado
+    ├── connect.sh           # Conexão (usa outputs)
+    ├── destroy.sh           # Destruição completa
     └── validate.sh          # Validação de ambiente
 ```
 

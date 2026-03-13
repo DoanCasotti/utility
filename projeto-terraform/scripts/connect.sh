@@ -2,33 +2,43 @@
 set -euo pipefail
 
 # ==============================================================================
-# Script: Conectar ao RDS - Liga Bastion, Abre Túnel, Desliga Bastion
+# Script: Conectar ao RDS via Bastion (Terraform)
 # ==============================================================================
 
-# Carregar variáveis do .env
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-if [ -f "$SCRIPT_DIR/.env" ]; then
+cd "$(dirname "$0")/.."
+
+# Carregar .env
+if [ -f ".env" ]; then
     set -a
-    source "$SCRIPT_DIR/.env"
-    set +a
-elif [ -f "$SCRIPT_DIR/../.env" ]; then
-    set -a
-    source "$SCRIPT_DIR/../.env"
+    source .env
     set +a
 else
-    echo "❌ Arquivo .env não encontrado. Copie .env.example para .env"
+    echo "❌ Arquivo .env não encontrado"
     exit 1
 fi
 
-# Configurar AWS Profile se especificado
-if [ -n "${AWS_PROFILE:-}" ] && [ "$AWS_PROFILE" != "default" ]; then
-    export AWS_PROFILE
+# Verificar se terraform-outputs.json existe
+if [ ! -f "terraform-outputs.json" ]; then
+    echo "❌ terraform-outputs.json não encontrado"
+    echo "💡 Execute: scripts/deploy.sh primeiro"
+    exit 1
 fi
 
-# Variáveis derivadas
-DB_IDENTIFIER="${PROJECT_NAME,,}-${ENV,,}-rds-privado"
-BASTION_NAME="${PROJECT_NAME}-${ENV}-Bastion"
+# Extrair informações do Terraform
+INSTANCE_ID=$(jq -r '.bastion_instance_id.value' terraform-outputs.json)
+RDS_ADDRESS=$(jq -r '.rds_address.value' terraform-outputs.json)
 
+if [ "$INSTANCE_ID" == "null" ] || [ -z "$INSTANCE_ID" ]; then
+    echo "❌ Bastion não encontrado nos outputs"
+    exit 1
+fi
+
+if [ "$RDS_ADDRESS" == "null" ] || [ -z "$RDS_ADDRESS" ]; then
+    echo "❌ RDS não encontrado nos outputs"
+    exit 1
+fi
+
+# Validações
 if ! aws sts get-caller-identity &> /dev/null; then
     echo "❌ Credenciais AWS inválidas"
     exit 1
@@ -39,6 +49,7 @@ if lsof -Pi :"$LOCAL_PORT" -sTCP:LISTEN -t &> /dev/null; then
     exit 1
 fi
 
+# Cleanup automático
 cleanup() {
     if [ -n "${INSTANCE_ID:-}" ]; then
         echo ""
@@ -52,21 +63,13 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
-echo "🔍 Localizando Bastion..."
-INSTANCE_ID=$(aws ec2 describe-instances \
-    --filters "Name=tag:Project,Values=$PROJECT_NAME" \
-              "Name=tag:Environment,Values=$ENV" \
-              "Name=tag:Name,Values=$BASTION_NAME" \
-              "Name=instance-state-name,Values=stopped,running" \
-    --query "Reservations[0].Instances[0].InstanceId" \
-    --output text --region "$AWS_REGION")
+echo "🔍 Verificando Bastion..."
+INSTANCE_STATE=$(aws ec2 describe-instances --instance-ids "$INSTANCE_ID" --query "Reservations[0].Instances[0].State.Name" --output text --region "$AWS_REGION" 2>/dev/null || echo "None")
 
-if [ "$INSTANCE_ID" == "None" ] || [ -z "$INSTANCE_ID" ]; then
+if [ "$INSTANCE_STATE" == "None" ]; then
     echo "❌ Bastion não encontrado"
     exit 1
 fi
-
-INSTANCE_STATE=$(aws ec2 describe-instances --instance-ids "$INSTANCE_ID" --query "Reservations[0].Instances[0].State.Name" --output text --region "$AWS_REGION")
 
 if [ "$INSTANCE_STATE" == "stopped" ]; then
     echo "⏳ Iniciando Bastion..."
@@ -83,24 +86,18 @@ for i in {1..12}; do
     sleep 5
 done
 
-echo "🔍 Obtendo endpoint RDS..."
-DB_INFO=$(aws rds describe-db-instances \
-    --db-instance-identifier "$DB_IDENTIFIER" \
-    --query "DBInstances[0].[Endpoint.Address,DBInstanceStatus]" \
-    --output text --region "$AWS_REGION" 2>/dev/null || echo "None None")
+echo "🔍 Verificando RDS..."
+RDS_STATUS=$(aws rds describe-db-instances --query "DBInstances[?Endpoint.Address=='$RDS_ADDRESS'].DBInstanceStatus" --output text --region "$AWS_REGION" 2>/dev/null || echo "None")
 
-DB_ENDPOINT=$(echo "$DB_INFO" | awk '{print $1}')
-DB_STATUS=$(echo "$DB_INFO" | awk '{print $2}')
-
-if [ "$DB_ENDPOINT" == "None" ] || [ -z "$DB_ENDPOINT" ]; then
+if [ "$RDS_STATUS" == "None" ] || [ -z "$RDS_STATUS" ]; then
     echo "❌ RDS não encontrado"
     exit 1
 fi
 
-if [ "$DB_STATUS" != "available" ]; then
-    echo "⚠️  RDS está em estado: $DB_STATUS"
-    if [ "$DB_STATUS" == "stopped" ]; then
-        echo "💡 Execute: scripts/start-rds.sh"
+if [ "$RDS_STATUS" != "available" ]; then
+    echo "⚠️  RDS está em estado: $RDS_STATUS"
+    if [ "$RDS_STATUS" == "stopped" ]; then
+        echo "💡 Execute: aws rds start-db-instance --db-instance-identifier <id>"
     fi
     exit 1
 fi
@@ -114,5 +111,5 @@ echo ""
 aws ssm start-session \
     --target "$INSTANCE_ID" \
     --document-name AWS-StartPortForwardingSessionToRemoteHost \
-    --parameters "{\"host\":[\"$DB_ENDPOINT\"],\"portNumber\":[\"$REMOTE_PORT\"],\"localPortNumber\":[\"$LOCAL_PORT\"]}" \
+    --parameters "{\"host\":[\"$RDS_ADDRESS\"],\"portNumber\":[\"$REMOTE_PORT\"],\"localPortNumber\":[\"$LOCAL_PORT\"]}" \
     --region "$AWS_REGION"

@@ -5,6 +5,8 @@ set -euo pipefail
 # Script: Validação de Pré-requisitos (Terraform)
 # ==============================================================================
 
+cd "$(dirname "$0")/.."
+
 echo "🔍 Validando ambiente Terraform..."
 echo ""
 
@@ -39,15 +41,23 @@ echo "✅ Credenciais AWS válidas"
 echo "   Conta: $AWS_ACCOUNT"
 echo "   Usuário: $AWS_USER"
 
-# 4. Verificar terraform.tfvars
-if [ ! -f "terraform.tfvars" ]; then
-    echo "⚠️  terraform.tfvars não encontrado"
-    echo "💡 Execute: cp terraform.tfvars.example terraform.tfvars"
+# 4. Verificar .env
+if [ ! -f ".env" ]; then
+    echo "⚠️  .env não encontrado"
+    echo "💡 Execute: cp .env.example .env"
 else
-    echo "✅ terraform.tfvars encontrado"
+    echo "✅ .env encontrado"
 fi
 
-# 5. Verificar Session Manager Plugin
+# 5. Verificar jq
+if ! command -v jq &> /dev/null; then
+    echo "❌ jq não instalado (necessário)"
+    echo "💡 Instale: sudo apt install jq (Linux) ou brew install jq (Mac)"
+    exit 1
+fi
+echo "✅ jq instalado"
+
+# 6. Verificar Session Manager Plugin
 if ! command -v session-manager-plugin &> /dev/null; then
     echo "⚠️  Session Manager Plugin não instalado"
     echo "💡 Necessário para conectar ao banco"
@@ -55,14 +65,6 @@ else
     echo "✅ Session Manager Plugin instalado"
 fi
 
-# 6. Verificar jq (para outputs)
-if ! command -v jq &> /dev/null; then
-    echo "⚠️  jq não instalado (opcional)"
-    echo "💡 Instale para melhor visualização dos outputs"
-else
-    echo "✅ jq instalado"
-fi
-
 echo ""
 echo "✅ Ambiente validado com sucesso!"
-echo "🚀 Você pode executar: ./deploy.sh"
+echo "🚀 Você pode executar: scripts/deploy.sh"
