@@ -10,12 +10,19 @@ Coleção de utilitários para automação de infraestrutura AWS.
 
 ```
 utility/
-├── projeto-sh/          # Infraestrutura AWS Automatizada
+├── projeto-sh/          # Infraestrutura AWS Automatizada (Shell Scripts)
 │   ├── deploy.sh       # Deploy completo
 │   ├── connect.sh      # Conectar ao banco
 │   ├── destroy.sh      # Destruir infraestrutura
 │   ├── validate.sh     # Validar ambiente
 │   ├── scripts/        # Scripts auxiliares
+│   └── README.md       # Documentação completa
+│
+├── projeto-terraform/   # Infraestrutura AWS com Terraform (IaC)
+│   ├── *.tf            # Arquivos Terraform
+│   ├── deploy.sh       # Deploy automatizado
+│   ├── connect.sh      # Conectar ao banco
+│   ├── destroy.sh      # Destruir infraestrutura
 │   └── README.md       # Documentação completa
 │
 └── .env.example        # Template de configuração
@@ -59,7 +66,7 @@ Cada projeto tem sua documentação completa:
 
 ## 🔧 Projetos Disponíveis
 
-### 🏗️ projeto-sh - Infraestrutura AWS
+### 🏗️ projeto-sh - Infraestrutura AWS (Shell Scripts)
 
 Infraestrutura completa para RDS PostgreSQL privado com Bastion Host via SSM.
 
@@ -72,6 +79,22 @@ Infraestrutura completa para RDS PostgreSQL privado com Bastion Host via SSM.
 - ✅ Estimativa de custos em tempo real
 
 **[Ver documentação completa →](projeto-sh/README.md)**
+
+---
+
+### 🎯 projeto-terraform - Infraestrutura AWS (Terraform/IaC)
+
+Mesma infraestrutura usando **Terraform** com as melhores práticas de IaC.
+
+**Vantagens:**
+- ✅ Idempotência nativa
+- ✅ State management automático
+- ✅ Visualização com `terraform plan`
+- ✅ Rollback facilitado
+- ✅ Código declarativo
+- ✅ Reutilização via modules
+
+**[Ver documentação completa →](projeto-terraform/README.md)**
 
 ## 📝 Licença
 

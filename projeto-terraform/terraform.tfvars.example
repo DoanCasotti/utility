@@ -1,0 +1,20 @@
+# ==============================================================================
+# Terraform Variables - EXEMPLO
+# ==============================================================================
+
+# Identificação do Projeto
+project_name = "DataApp"
+environment  = "Prod"
+
+# AWS
+aws_region  = "us-east-1"
+aws_profile = "default"
+
+# RDS
+db_username = "postgres"
+# db_password será solicitado ou via variável de ambiente
+
+# Infraestrutura
+bastion_instance_type  = "t3.nano"
+rds_instance_class     = "db.t4g.micro"
+rds_allocated_storage  = 20
